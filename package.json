@@ -4,7 +4,9 @@
   "description": "A cmd chat built with nodejs.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js",
+    "serve": "node src/server.js"
   },
   "repository": {
     "type": "git",
@@ -21,5 +23,8 @@
     "eslint-config-prettier": "^6.9.0",
     "eslint-plugin-prettier": "^3.1.2",
     "prettier": "^1.19.1"
+  },
+  "dependencies": {
+    "inquirer": "^7.0.1"
   }
 }
