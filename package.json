@@ -25,6 +25,7 @@
     "prettier": "^1.19.1"
   },
   "dependencies": {
-    "inquirer": "^7.0.1"
+    "inquirer": "^7.0.1",
+    "pg": "^7.16.1"
   }
 }
