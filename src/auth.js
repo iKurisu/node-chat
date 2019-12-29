@@ -1,3 +1,5 @@
+const bcrypt = require("bcrypt");
+
 const craftMsg = field => `${field} should be at least 6 characters long.`;
 
 const cantSignUp = (action, res) => action === "Sign up" && res.rowCount !== 0;
@@ -26,10 +28,17 @@ const validatePassword = client => async (password, { action, username }) => {
   const query = `SELECT * FROM users WHERE username = '${username}' and password = '${password}'`;
   const res = await client.query(query);
 
-  return cantSignIn(action, res) ? "Password is incorrect." : true;
+
+const signUp = client => async ({ username, password }) => {
+  const hashedPassword = await bcrypt.hash(password, 8);
+
+  await client.query(
+    `INSERT INTO users VALUES('${username}', '${hashedPassword}')`
+  );
 };
 
 module.exports = {
   validateUsername,
-  validatePassword
+  validatePassword,
+  signUp
 };

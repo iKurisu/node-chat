@@ -1,7 +1,7 @@
 require("dotenv").config();
 const { Client } = require("pg");
 const expect = require("chai").expect;
-const { validateUsername, validatePassword } = require("../src/auth");
+const { validateUsername, validatePassword, signUp } = require("../src/auth");
 
 describe("auth", () => {
   let client;
@@ -24,7 +24,7 @@ describe("auth", () => {
   });
 
   after(async () => {
-    await client.query("DELETE FROM users WHERE username = 'userAA'");
+    await client.query("DELETE FROM users");
     client.end();
   });
 
@@ -73,5 +73,18 @@ describe("auth", () => {
         username: "ikurisu"
       })
     ).equal(true);
+  });
+
+  it("sign ups a valid user correctly", async () => {
+    await signUp(client)({
+      username: "ikurisu",
+      password: "mysupersecretpassword"
+    });
+
+    const res = await client.query(
+      `SELECT * FROM users WHERE username = 'ikurisu'`
+    );
+
+    expect(res.rowCount).equal(1);
   });
 });
