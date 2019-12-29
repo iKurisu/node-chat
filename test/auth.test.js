@@ -18,8 +18,12 @@ describe("auth", () => {
 
     client.connect();
 
+    // Hash of "abcdef"
+    const hashedPassword =
+      "$2b$08$vHHU/SPPfWRZjhI5smBJ5ewOiAIeH.i4Yzw7j/6vq4VPz.wUcPrZ6";
+
     client
-      .query("INSERT INTO users VALUES ('userAA', 'abcdef')")
+      .query(`INSERT INTO users VALUES ('userAA', '${hashedPassword}')`)
       .catch(console.error);
   });
 

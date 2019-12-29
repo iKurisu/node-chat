@@ -25,9 +25,16 @@ const validatePassword = client => async (password, { action, username }) => {
     return craftMsg("Password");
   }
 
-  const query = `SELECT * FROM users WHERE username = '${username}' and password = '${password}'`;
+  const query = `SELECT * FROM users WHERE username = '${username}'`;
   const res = await client.query(query);
 
+  const matches =
+    action === "Sign in" && res.rowCount !== 0
+      ? await bcrypt.compare(password, res.rows[0].password)
+      : true;
+
+  return !matches ? "Password is incorrect." : true;
+};
 
 const signUp = client => async ({ username, password }) => {
   const hashedPassword = await bcrypt.hash(password, 8);
