@@ -1,19 +1,8 @@
-require("dotenv").config();
 const io = require("socket.io-client");
 const inquirer = require("inquirer");
-const connectClient = require("./client");
-const { validateUsername, validatePassword, signUp } = require("./auth");
+const { VALIDATE_USERNAME, VALIDATE_PASSWORD, SIGN_UP } = require("./events");
 
-const client = connectClient();
-
-const handleResult = async ({ action, username, password }) => {
-  if (action === "Sign up") {
-    await signUp(client)({ username, password });
-  }
-
-  const socket = io("ws://localhost:3000");
-  socket.emit("username", username);
-};
+const socket = io("ws://localhost:3000");
 
 inquirer
   .prompt([
@@ -27,14 +16,28 @@ inquirer
       type: "input",
       name: "username",
       message: "Enter username",
-      validate: validateUsername(client)
+      validate(username, { action }) {
+        const done = this.async();
+
+        socket.emit(VALIDATE_USERNAME, { username, action });
+        socket.on(VALIDATE_USERNAME, answer => done(answer));
+      }
     },
     {
       type: "password",
       name: "password",
       mask: "*",
       message: "Enter password",
-      validate: validatePassword(client)
+      validate(password, { action, username }) {
+        const done = this.async();
+
+        socket.emit(VALIDATE_PASSWORD, { action, username, password });
+        socket.on(VALIDATE_PASSWORD, answer => done(answer));
+      }
     }
   ])
-  .then(handleResult);
+  .then(async ({ action, username, password }) => {
+    if (action === SIGN_UP) {
+      socket.emit(SIGN_UP, { username, password });
+    }
+  });
