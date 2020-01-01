@@ -29,54 +29,63 @@ describe("auth", () => {
   });
 
   it("validates username correctly", async () => {
-    expect(await validateUsername(pool)("usr", {})).equal(
-      "Username should be at least 6 characters long."
-    );
-
-    expect(await validateUsername(pool)("userAA", { action: "Sign in" })).equal(
-      true
-    );
-    expect(await validateUsername(pool)("userAA", { action: "Sign up" })).equal(
-      "Username already exists."
-    );
+    expect(
+      await validateUsername(pool, { action: "Sign in", username: "usr" })
+    ).equal("Username should be at least 6 characters long.");
 
     expect(
-      await validateUsername(pool)("ikurisu", { action: "Sign in" })
+      await validateUsername(pool, { action: "Sign in", username: "userAA" })
+    ).equal(true);
+
+    expect(
+      await validateUsername(pool, { action: "Sign up", username: "userAA" })
+    ).equal("Username already exists.");
+
+    expect(
+      await validateUsername(pool, { action: "Sign in", username: "ikurisu" })
     ).equal("Username doesn't exist.");
+
     expect(
-      await validateUsername(pool)("ikurisu", { action: "Sign up" })
+      await validateUsername(pool, { action: "Sign up", username: "ikurisu" })
     ).equal(true);
   });
 
   it("validates password correctly", async () => {
-    expect(await validatePassword(pool)("abc", {})).equal(
-      "Password should be at least 6 characters long."
-    );
+    expect(
+      await validatePassword(pool, {
+        action: "Sign in",
+        username: "abc",
+        password: ""
+      })
+    ).equal("Password should be at least 6 characters long.");
 
     expect(
-      await validatePassword(pool)("abcdef", {
+      await validatePassword(pool, {
         action: "Sign in",
-        username: "userAA"
+        username: "userAA",
+        password: "abcdef"
       })
     ).equal(true);
 
     expect(
-      await validatePassword(pool)("abcdefg", {
+      await validatePassword(pool, {
         action: "Sign in",
-        username: "userAA"
+        username: "userAA",
+        password: "abcdefg"
       })
     ).equal("Password is incorrect.");
 
     expect(
-      await validatePassword(pool)("a_random_password", {
+      await validatePassword(pool, {
         action: "Sign up",
-        username: "ikurisu"
+        username: "ikurisu",
+        password: "a_random_password"
       })
     ).equal(true);
   });
 
   it("sign ups a valid user correctly", async () => {
-    await signUp(pool)({
+    await signUp(pool, {
       username: "ikurisu",
       password: "mysupersecretpassword"
     });

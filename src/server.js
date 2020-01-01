@@ -13,22 +13,23 @@ pool.connect();
 
 io.on("connection", socket => {
   socket.on(VALIDATE_USERNAME, async ({ username, action }) => {
-    const response = await validateUsername(pool)(username, { action });
+    const response = await validateUsername(pool, { action, username });
 
     socket.emit(VALIDATE_USERNAME, response);
   });
 
   socket.on(VALIDATE_PASSWORD, async ({ action, username, password }) => {
-    const response = await validatePassword(pool)(password, {
+    const response = await validatePassword(pool, {
       action,
-      username
+      username,
+      password
     });
 
-    socket.emit(VALIDATE_USERNAME, response);
+    socket.emit(VALIDATE_PASSWORD, response);
   });
 
   socket.on(SIGN_UP, async ({ username, password }) => {
-    await signUp(pool)({ username, password });
+    await signUp(pool, { username, password });
   });
 });
 

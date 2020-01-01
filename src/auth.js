@@ -5,7 +5,7 @@ const craftMsg = field => `${field} should be at least 6 characters long.`;
 const cantSignUp = (action, res) => action === "Sign up" && res.rowCount !== 0;
 const cantSignIn = (action, res) => action === "Sign in" && res.rowCount === 0;
 
-const validateUsername = pool => async (username, { action }) => {
+const validateUsername = async (pool, { action, username }) => {
   if (username.length < 6) {
     return craftMsg("Username");
   }
@@ -20,7 +20,7 @@ const validateUsername = pool => async (username, { action }) => {
     : true;
 };
 
-const validatePassword = pool => async (password, { action, username }) => {
+const validatePassword = async (pool, { action, username, password }) => {
   if (password.length < 6) {
     return craftMsg("Password");
   }
@@ -36,7 +36,7 @@ const validatePassword = pool => async (password, { action, username }) => {
   return !matches ? "Password is incorrect." : true;
 };
 
-const signUp = pool => async ({ username, password }) => {
+const signUp = async (pool, { username, password }) => {
   const hashedPassword = await bcrypt.hash(password, 8);
 
   await pool.query(
