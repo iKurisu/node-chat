@@ -5,13 +5,13 @@ const craftMsg = field => `${field} should be at least 6 characters long.`;
 const cantSignUp = (action, res) => action === "Sign up" && res.rowCount !== 0;
 const cantSignIn = (action, res) => action === "Sign in" && res.rowCount === 0;
 
-const validateUsername = client => async (username, { action }) => {
+const validateUsername = async (pool, { action, username }) => {
   if (username.length < 6) {
     return craftMsg("Username");
   }
 
   const query = `SELECT * FROM users WHERE username = '${username}'`;
-  const res = await client.query(query);
+  const res = await pool.query(query);
 
   return cantSignUp(action, res)
     ? "Username already exists."
@@ -20,13 +20,13 @@ const validateUsername = client => async (username, { action }) => {
     : true;
 };
 
-const validatePassword = client => async (password, { action, username }) => {
+const validatePassword = async (pool, { action, username, password }) => {
   if (password.length < 6) {
     return craftMsg("Password");
   }
 
   const query = `SELECT * FROM users WHERE username = '${username}'`;
-  const res = await client.query(query);
+  const res = await pool.query(query);
 
   const matches =
     action === "Sign in" && res.rowCount !== 0
@@ -36,10 +36,10 @@ const validatePassword = client => async (password, { action, username }) => {
   return !matches ? "Password is incorrect." : true;
 };
 
-const signUp = client => async ({ username, password }) => {
+const signUp = async (pool, { username, password }) => {
   const hashedPassword = await bcrypt.hash(password, 8);
 
-  await client.query(
+  await pool.query(
     `INSERT INTO users VALUES('${username}', '${hashedPassword}')`
   );
 };

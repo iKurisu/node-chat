@@ -1,91 +1,96 @@
 require("dotenv").config();
-const { Client } = require("pg");
+const { Pool } = require("pg");
 const expect = require("chai").expect;
 const { validateUsername, validatePassword, signUp } = require("../src/auth");
 
 describe("auth", () => {
-  let client;
+  let pool;
 
   before(() => {
-    client = new Client({
-      user: process.env.TEST_DB_USER,
-      host: process.env.TEST_DB_HOST,
-      database: process.env.TEST_DB_DATABASE,
-      password: process.env.TEST_DB_PASSWORD,
-      port: process.env.TEST_DB_PORT,
+    pool = new Pool({
+      connectionString: process.env.TEST_DB_CONNECTION_STRING,
       ssl: true
     });
 
-    client.connect();
+    pool.connect();
 
     // Hash of "abcdef"
     const hashedPassword =
       "$2b$08$vHHU/SPPfWRZjhI5smBJ5ewOiAIeH.i4Yzw7j/6vq4VPz.wUcPrZ6";
 
-    client
+    pool
       .query(`INSERT INTO users VALUES ('userAA', '${hashedPassword}')`)
       .catch(console.error);
   });
 
   after(async () => {
-    await client.query("DELETE FROM users");
-    client.end();
+    await pool.query("DELETE FROM users");
+    pool.end();
   });
 
   it("validates username correctly", async () => {
-    expect(await validateUsername(client)("usr", {})).equal(
-      "Username should be at least 6 characters long."
-    );
+    expect(
+      await validateUsername(pool, { action: "Sign in", username: "usr" })
+    ).equal("Username should be at least 6 characters long.");
 
     expect(
-      await validateUsername(client)("userAA", { action: "Sign in" })
+      await validateUsername(pool, { action: "Sign in", username: "userAA" })
     ).equal(true);
+
     expect(
-      await validateUsername(client)("userAA", { action: "Sign up" })
+      await validateUsername(pool, { action: "Sign up", username: "userAA" })
     ).equal("Username already exists.");
 
     expect(
-      await validateUsername(client)("ikurisu", { action: "Sign in" })
+      await validateUsername(pool, { action: "Sign in", username: "ikurisu" })
     ).equal("Username doesn't exist.");
+
     expect(
-      await validateUsername(client)("ikurisu", { action: "Sign up" })
+      await validateUsername(pool, { action: "Sign up", username: "ikurisu" })
     ).equal(true);
   });
 
   it("validates password correctly", async () => {
-    expect(await validatePassword(client)("abc", {})).equal(
-      "Password should be at least 6 characters long."
-    );
+    expect(
+      await validatePassword(pool, {
+        action: "Sign in",
+        username: "abc",
+        password: ""
+      })
+    ).equal("Password should be at least 6 characters long.");
 
     expect(
-      await validatePassword(client)("abcdef", {
+      await validatePassword(pool, {
         action: "Sign in",
-        username: "userAA"
+        username: "userAA",
+        password: "abcdef"
       })
     ).equal(true);
 
     expect(
-      await validatePassword(client)("abcdefg", {
+      await validatePassword(pool, {
         action: "Sign in",
-        username: "userAA"
+        username: "userAA",
+        password: "abcdefg"
       })
     ).equal("Password is incorrect.");
 
     expect(
-      await validatePassword(client)("a_random_password", {
+      await validatePassword(pool, {
         action: "Sign up",
-        username: "ikurisu"
+        username: "ikurisu",
+        password: "a_random_password"
       })
     ).equal(true);
   });
 
   it("sign ups a valid user correctly", async () => {
-    await signUp(client)({
+    await signUp(pool, {
       username: "ikurisu",
       password: "mysupersecretpassword"
     });
 
-    const res = await client.query(
+    const res = await pool.query(
       `SELECT * FROM users WHERE username = 'ikurisu'`
     );
 
