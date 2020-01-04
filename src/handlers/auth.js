@@ -25,13 +25,13 @@ const validatePassword = async (pool, { action, username, password }) => {
     return craftMsg("Password");
   }
 
+  if (action === "Sign up") {
+    return true;
+  }
+
   const query = `SELECT * FROM users WHERE username = '${username}'`;
   const res = await pool.query(query);
-
-  const matches =
-    action === "Sign in" && res.rowCount !== 0
-      ? await bcrypt.compare(password, res.rows[0].password)
-      : true;
+  const matches = await bcrypt.compare(password, res.rows[0].password);
 
   return !matches ? "Password is incorrect." : true;
 };
