@@ -6,12 +6,14 @@ const {
   validatePassword,
   signUp
 } = require("./handlers/auth");
-const { fetchRooms } = require("./handlers/rooms");
+const { fetchRooms, joinRoom, createRoom } = require("./handlers/rooms");
 const {
   VALIDATE_USERNAME,
   VALIDATE_PASSWORD,
   SIGN_UP,
-  FETCH_ROOMS
+  FETCH_ROOMS,
+  JOIN_ROOM,
+  CREATE_ROOM
 } = require("./events");
 
 const pool = new Pool({
@@ -48,6 +50,26 @@ io.on("connection", socket => {
     const response = await fetchRooms(pool, { username });
 
     socket.emit(FETCH_ROOMS, response);
+  });
+
+  socket.on(CREATE_ROOM, async ({ username, room }) => {
+    const response = await createRoom(pool, { username, room });
+
+    if (response === true) {
+      socket.join(room);
+    }
+
+    socket.emit(CREATE_ROOM, response);
+  });
+
+  socket.on(JOIN_ROOM, async ({ username, room }) => {
+    const response = await joinRoom(pool, { username, room });
+
+    if (response === true) {
+      socket.join(room);
+    }
+
+    socket.emit(JOIN_ROOM, response);
   });
 });
 

@@ -2,7 +2,9 @@ const {
   VALIDATE_USERNAME,
   VALIDATE_PASSWORD,
   SIGN_UP,
-  FETCH_ROOMS
+  FETCH_ROOMS,
+  JOIN_ROOM,
+  CREATE_ROOM
 } = require("./events");
 const { choicesFromRooms } = require("./utils/prompts");
 
@@ -31,9 +33,7 @@ const getPromps = socket => [
     validate({ password }, { action, username }) {
       return new Promise(res => {
         socket.emit(VALIDATE_PASSWORD, { action, username, password });
-        socket.on(VALIDATE_PASSWORD, answer => {
-          res(answer);
-        });
+        socket.on(VALIDATE_PASSWORD, res);
       });
     },
     /* 
@@ -59,6 +59,34 @@ const getPromps = socket => [
       return password.rooms ? "Choose a room" : "No rooms found";
     },
     choices: ({ password }) => choicesFromRooms(password.rooms)
+  },
+  {
+    type: "input",
+    name: "create room",
+    message: "Enter room name",
+    when({ room }) {
+      return room === "Create a room";
+    },
+    validate(room, { username }) {
+      return new Promise(res => {
+        socket.emit(CREATE_ROOM, { username, room });
+        socket.on(CREATE_ROOM, res);
+      });
+    }
+  },
+  {
+    type: "input",
+    name: "join room",
+    message: "Enter room name",
+    when({ room }) {
+      return room === "Join a room";
+    },
+    validate(room, { username }) {
+      return new Promise(res => {
+        socket.emit(JOIN_ROOM, { username, room });
+        socket.on(JOIN_ROOM, res);
+      });
+    }
   }
 ];
 
