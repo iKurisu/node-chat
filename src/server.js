@@ -1,8 +1,18 @@
 require("dotenv").config();
 const io = require("socket.io")();
 const { Pool } = require("pg");
-const { validateUsername, validatePassword, signUp } = require("./auth");
-const { VALIDATE_USERNAME, VALIDATE_PASSWORD, SIGN_UP } = require("./events");
+const {
+  validateUsername,
+  validatePassword,
+  signUp
+} = require("./handlers/auth");
+const { fetchRooms } = require("./handlers/rooms");
+const {
+  VALIDATE_USERNAME,
+  VALIDATE_PASSWORD,
+  SIGN_UP,
+  FETCH_ROOMS
+} = require("./events");
 
 const pool = new Pool({
   connectionString: process.env.TEST_DB_CONNECTION_STRING,
@@ -30,6 +40,14 @@ io.on("connection", socket => {
 
   socket.on(SIGN_UP, async ({ username, password }) => {
     await signUp(pool, { username, password });
+    const response = await fetchRooms(pool, { username });
+    socket.emit(FETCH_ROOMS, response);
+  });
+
+  socket.on(FETCH_ROOMS, async ({ username }) => {
+    const response = await fetchRooms(pool, { username });
+
+    socket.emit(FETCH_ROOMS, response);
   });
 });
 
