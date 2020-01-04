@@ -1,24 +1,30 @@
 require("dotenv").config();
 const { Pool } = require("pg");
 const expect = require("chai").expect;
-const { validateUsername, validatePassword, signUp } = require("../src/auth");
+const {
+  validateUsername,
+  validatePassword,
+  signUp
+} = require("../../src/handlers/auth");
 
 describe("auth", () => {
   let pool;
 
-  before(() => {
+  before(async () => {
     pool = new Pool({
       connectionString: process.env.TEST_DB_CONNECTION_STRING,
       ssl: true
     });
 
-    pool.connect();
+    await pool.connect();
+
+    await pool.query("DELETE FROM users");
 
     // Hash of "abcdef"
     const hashedPassword =
       "$2b$08$vHHU/SPPfWRZjhI5smBJ5ewOiAIeH.i4Yzw7j/6vq4VPz.wUcPrZ6";
 
-    pool
+    await pool
       .query(`INSERT INTO users VALUES ('userAA', '${hashedPassword}')`)
       .catch(console.error);
   });
