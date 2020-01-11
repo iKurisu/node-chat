@@ -69,7 +69,14 @@ io.on("connection", async socket => {
     const response = await joinRoom(pool, { username, room });
 
     if (response === true) {
-      socket.join(room);
+      socket.join(room, err => {
+        if (err) console.log(err);
+
+        io.to(room).emit(SEND_MESSAGE, {
+          username,
+          message: "joined the room"
+        });
+      });
     }
 
     socket.emit(JOIN_ROOM, response);
