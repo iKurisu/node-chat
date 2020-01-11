@@ -10,13 +10,14 @@ const {
   CREATE_ROOM,
   JOIN_ROOM,
   ENTER_ROOM,
-  SEND_MESSAGE
+  SEND_MESSAGE,
+  LEAVE_ROOM
 } = require("./events");
 const { choicesFromRooms } = require("./utils/prompts");
 
 const socket = io("ws://localhost:3000");
 
-const { log } = console;
+const { log, clear } = console;
 const on = event => new Promise(res => socket.on(event, res));
 
 const auth = async () => {
@@ -54,6 +55,10 @@ const auth = async () => {
 
   const rooms = await on(FETCH_ROOMS);
 
+  return { username, rooms };
+};
+
+const askRoom = async ({ username, rooms = [] }) => {
   const { room, create, join } = await prompt([
     {
       type: "list",
@@ -91,37 +96,67 @@ const auth = async () => {
     socket.emit(ENTER_ROOM, { username, room });
     await on(ENTER_ROOM);
 
-    return { username, room };
+    return { username, room, rooms };
   }
+
+  const newRoom = create ? create : join;
 
   return {
     username,
-    room: create ? create : join
+    room: newRoom,
+    rooms: rooms.concat(newRoom)
   };
 };
 
-auth()
-  .then(({ username, room }) => {
-    const rl = readline.createInterface(process.stdin, process.stdout);
+const handleChatRoom = ({ username, room, rooms }) => {
+  clear();
 
-    log(`Entered ${chalk.bold(room)}`);
+  const rl = readline.createInterface(process.stdin, process.stdout);
 
-    rl.on("line", answer => {
+  log(`Entered ${chalk.bold(room)}`);
+
+  rl.on("line", answer => {
+    if (answer[0] === "/") {
+      switch (answer) {
+        case "/quit":
+          rl.close();
+          process.exit(0);
+
+        // eslint-disable-next-line no-fallthrough
+        case "/exit":
+          clear();
+          rl.close();
+
+          socket.off(SEND_MESSAGE);
+          socket.emit(LEAVE_ROOM, { username, room });
+
+          askRoom({ username, rooms }).then(handleChatRoom);
+
+          break;
+      }
+    } else {
       socket.emit(SEND_MESSAGE, { username, room, message: answer });
+
       readline.moveCursor(process.stdout, 0, -1);
       process.stdout.clearLine();
-    });
+    }
+  });
 
-    socket.on(SEND_MESSAGE, ({ username, message }) => {
-      process.stdout.clearLine();
-      process.stdout.cursorTo(0);
-      log(`${chalk.bold(username)} ${message}`);
-      rl.prompt(true);
-    });
+  socket.on(SEND_MESSAGE, ({ username, message }) => {
+    process.stdout.clearLine();
+    process.stdout.cursorTo(0);
 
-    rl.prompt();
-  })
+    log(`${chalk.bold(username)} ${message}`);
+
+    rl.prompt(true);
+  });
+
+  rl.prompt();
+};
+
+auth()
+  .then(answer => askRoom(answer).then(handleChatRoom))
   .catch(err => {
     console.error(err);
-    process.exit();
+    process.exit(1);
   });

@@ -15,7 +15,8 @@ const {
   JOIN_ROOM,
   CREATE_ROOM,
   ENTER_ROOM,
-  SEND_MESSAGE
+  SEND_MESSAGE,
+  LEAVE_ROOM
 } = require("./events");
 
 const pool = new Pool({
@@ -86,7 +87,7 @@ io.on("connection", async socket => {
     socket.join(room, err => {
       if (err) console.log(err);
 
-      io.to(room).emit(SEND_MESSAGE, { username, message: `joined the room` });
+      io.to(room).emit(SEND_MESSAGE, { username, message: "joined the room" });
       socket.emit(ENTER_ROOM, true);
     });
   });
@@ -96,6 +97,14 @@ io.on("connection", async socket => {
       username,
       message
     });
+  });
+
+  socket.on(LEAVE_ROOM, ({ username, room }) => {
+    io.to(room).emit(SEND_MESSAGE, {
+      username,
+      message: "left the room"
+    });
+    socket.leave(room);
   });
 });
 
