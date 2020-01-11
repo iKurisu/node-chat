@@ -29,4 +29,8 @@ describe("prompt utils", () => {
 
     expect(separator.calledOnce).to.equal(true);
   });
+
+  it("generates correct chocies from an empty array", () => {
+    expect(choicesFromRooms([])).to.eql(["Create a room", "Join a room"]);
+  });
 });

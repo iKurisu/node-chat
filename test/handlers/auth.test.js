@@ -40,6 +40,10 @@ describe("auth", () => {
     ).equal("Username should be at least 6 characters long.");
 
     expect(
+      await validateUsername(pool, { action: "Sing up", username: "sfss'sdf" })
+    ).equal("Username cannot contain special characters.");
+
+    expect(
       await validateUsername(pool, { action: "Sign in", username: "userAA" })
     ).equal(true);
 
@@ -64,6 +68,14 @@ describe("auth", () => {
         password: ""
       })
     ).equal("Password should be at least 6 characters long.");
+
+    expect(
+      await validatePassword(pool, {
+        action: "Sign up",
+        username: "userAA",
+        password: "sdfs`sdfsd"
+      })
+    ).equal("Password cannot contain special characters.");
 
     expect(
       await validatePassword(pool, {

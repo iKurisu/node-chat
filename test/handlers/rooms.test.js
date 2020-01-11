@@ -73,6 +73,10 @@ describe("rooms handlers", () => {
     ).to.equal("Room name should be at least 6 characters long");
 
     expect(
+      await createRoom(pool, { username: "userAA", room: "sdflk'sdf`sdf" })
+    ).to.equal("Room cannot contain special characters");
+
+    expect(
       await createRoom(pool, { username: "userAA", room: "Room A" })
     ).to.equal("Room already exists");
   });
