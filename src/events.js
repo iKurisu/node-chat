@@ -7,5 +7,6 @@ module.exports = {
   CREATE_ROOM: "Create room",
   ENTER_ROOM: "Enter room",
   USER_JOINED: "User joined",
-  SEND_MESSAGE: "Send message"
+  SEND_MESSAGE: "Send message",
+  LEAVE_ROOM: "Leave room"
 };
