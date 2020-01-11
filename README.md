@@ -1,2 +1,2 @@
 # node-chat
-A cmd chat built with nodejs.
+A cmd chat built with NodeJS, SocketIO and PostgreSQL.
