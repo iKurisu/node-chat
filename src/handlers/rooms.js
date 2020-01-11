@@ -1,3 +1,5 @@
+const { hasDangerousChar } = require("../utils/validate");
+
 const fetchRooms = async (pool, { username }) => {
   const query = `SELECT * FROM users WHERE username = '${username}'`;
   const response = await pool.query(query);
@@ -52,6 +54,10 @@ const joinRoom = async (pool, { username, room }) => {
 const createRoom = async (pool, { username, room }) => {
   if (room.length < 6) {
     return "Room name should be at least 6 characters long";
+  }
+
+  if (hasDangerousChar(room)) {
+    return "Room cannot contain special characters";
   }
 
   const roomExists = await checkRoom(pool, room);
