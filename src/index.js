@@ -1,17 +1,22 @@
 const io = require("socket.io-client");
+const readline = require("readline");
 const { prompt } = require("inquirer");
+const chalk = require("chalk");
 const {
   VALIDATE_USERNAME,
   VALIDATE_PASSWORD,
   SIGN_UP,
   FETCH_ROOMS,
   CREATE_ROOM,
-  JOIN_ROOM
+  JOIN_ROOM,
+  ENTER_ROOM,
+  SEND_MESSAGE
 } = require("./events");
 const { choicesFromRooms } = require("./utils/prompts");
 
 const socket = io("ws://localhost:3000");
 
+const { log } = console;
 const on = event => new Promise(res => socket.on(event, res));
 
 const auth = async () => {
@@ -49,7 +54,7 @@ const auth = async () => {
 
   const rooms = await on(FETCH_ROOMS);
 
-  const { room } = await prompt([
+  const { room, create, join } = await prompt([
     {
       type: "list",
       name: "room",
@@ -82,7 +87,41 @@ const auth = async () => {
     }
   ]);
 
-  return room;
+  if (!create && !join) {
+    socket.emit(ENTER_ROOM, { username, room });
+    await on(ENTER_ROOM);
+
+    return { username, room };
+  }
+
+  return {
+    username,
+    room: create ? create : join
+  };
 };
 
-auth().finally(() => process.exit());
+auth()
+  .then(({ username, room }) => {
+    const rl = readline.createInterface(process.stdin, process.stdout);
+
+    log(`Entered ${chalk.bold(room)}`);
+
+    rl.on("line", answer => {
+      socket.emit(SEND_MESSAGE, { username, room, message: answer });
+      readline.moveCursor(process.stdout, 0, -1);
+      process.stdout.clearLine();
+    });
+
+    socket.on(SEND_MESSAGE, ({ username, message }) => {
+      process.stdout.clearLine();
+      process.stdout.cursorTo(0);
+      log(`${chalk.bold(username)} ${message}`);
+      rl.prompt(true);
+    });
+
+    rl.prompt();
+  })
+  .catch(err => {
+    console.error(err);
+    process.exit();
+  });

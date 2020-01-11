@@ -4,5 +4,8 @@ module.exports = {
   SIGN_UP: "Sign up",
   FETCH_ROOMS: "Fetch rooms",
   JOIN_ROOM: "Join room",
-  CREATE_ROOM: "Create room"
+  CREATE_ROOM: "Create room",
+  ENTER_ROOM: "Enter room",
+  USER_JOINED: "User joined",
+  SEND_MESSAGE: "Send message"
 };
